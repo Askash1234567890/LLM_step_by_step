@@ -13,9 +13,10 @@ class MaskedHeadAttention(torch.nn.Module):
         self.Wk = torch.nn.Linear(emb_size, head_size)
         self.Wq = torch.nn.Linear(emb_size, head_size)
         self.Wv = torch.nn.Linear(emb_size, head_size)
-        self.Mask = torch.tril(
+        # need for switch data to device
+        self.register_buffer('Mask', torch.tril(
             torch.ones((max_seq_len, max_seq_len))
-        )
+        ))
 
     def forward(self, x: torch.Tensor):
         K = self.Wk(x)

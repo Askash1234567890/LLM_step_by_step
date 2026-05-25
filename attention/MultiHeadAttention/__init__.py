@@ -1,7 +1,8 @@
 import torch
 from ..MaskedHeadAttention import MaskedHeadAttention
 
-class MultiHeadAttention():
+
+class MultiHeadAttention(torch.nn.Module):
     "multihead attn"
     def __init__(self, num_heads, emb_size, head_size, max_seq_len, dropout):
         super().__init__()

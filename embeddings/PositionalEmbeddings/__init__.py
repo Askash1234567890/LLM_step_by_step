@@ -10,5 +10,6 @@ class PositionalEmbeddings(nn.Module):
         self.embeddings = nn.Embedding(max_seq_len, emb_size)
 
     def forward(self, seq_len: int):
-        indices = torch.arange(seq_len)
+        # need transfer indices to device
+        indices = torch.arange(seq_len, device=self.embeddings.weight.device)
         return self.embeddings(indices)
