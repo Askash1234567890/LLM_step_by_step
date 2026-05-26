@@ -56,6 +56,15 @@ class GPT(torch.nn.Module):
         
         return self.linear(output)
 
+    def train(
+        self,
+        train_loader: DataLoader,
+        val_loader: DataLoader,
+        num_epoch: int,
+        learning_rate: float
+    ):
+        pass
+
     def generate(
             self,
             x: torch.Tensor,
