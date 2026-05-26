@@ -15,6 +15,7 @@ class GPT(torch.nn.Module):
         num_heads: int,
         head_size: int,
         num_layers: int,
+        temperature: float = 1.0,
         dropout: float = 0.1,
         device: str = "cpu"
     ):
@@ -26,6 +27,7 @@ class GPT(torch.nn.Module):
         self.num_heads = num_heads
         self.head_size = head_size
         self.num_layers = num_layers
+        self.temperature = temperature
         self.dropout = dropout
         self.device = device
 
@@ -54,12 +56,20 @@ class GPT(torch.nn.Module):
         
         return self.linear(output)
 
-    def generate(self, x: torch.Tensor, max_new_tokens: int):
+    def generate(
+        self, x: torch.Tensor, 
+        max_new_tokens: int,
+        do_sample: bool = False,
+        temperature: float = 1.0
+    ):
         for _ in range(max_new_tokens):
             res = x[:, -self.max_seq_len:]
-            logits = self(res)
-            probs = torch.softmax(logits, dim=-1)
-            next_token = probs.argmax(dim=-1)[:, -1:]
+            logits = self(res) / temperature
+            probs = torch.softmax(logits, dim=-1)[:, -1, :]
+            if do_sample:
+                next_token = torch.multinomial(probs, num_samples=1)
+            else:
+                next_token = torch.unsqueeze(probs.argmax(dim=-1), 1)
             x = torch.cat((x, next_token), dim=1)
         return x
 
