@@ -1,0 +1,4 @@
+logging:
+  log_every_batch: 50
+  use_wandb: false
+  project_name: llm_step_by_step

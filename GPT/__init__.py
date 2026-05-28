@@ -1,4 +1,8 @@
+import json
+import os
+
 import torch
+from safetensors.torch import save_file, load_file
 
 from embeddings.TokenEmbeddings import TokenEmbeddings
 from embeddings.PositionalEmbeddings import PositionalEmbeddings
@@ -28,7 +32,6 @@ class GPT(torch.nn.Module):
         self.head_size = head_size
         self.num_layers = num_layers
         self.temperature = temperature
-        self.dropout = dropout
         self.device = device
 
         self.tokenEmbeddings = TokenEmbeddings(vocab_size=vocab_size, emb_size=emb_size)
@@ -36,12 +39,12 @@ class GPT(torch.nn.Module):
         self.dropout = torch.nn.Dropout(dropout)
         self.decoder_blocks = torch.nn.ModuleList([
             Decoder(
-                num_heads = num_heads,
-                emb_size = emb_size,
-                head_size = head_size,
-                max_seq_len = max_seq_len,
-                hidden_size = hidden_size,
-                dropout = dropout
+                num_heads=num_heads,
+                emb_size=emb_size,
+                head_size=head_size,
+                max_seq_len=max_seq_len,
+                hidden_size=hidden_size,
+                dropout=dropout
             ) for _ in range(num_layers)
         ])
         self.linear = torch.nn.Linear(emb_size, vocab_size)
@@ -53,17 +56,8 @@ class GPT(torch.nn.Module):
 
         for decoder in self.decoder_blocks:
             output = decoder(output)
-        
-        return self.linear(output)
 
-    def train(
-        self,
-        train_loader: DataLoader,
-        val_loader: DataLoader,
-        num_epoch: int,
-        learning_rate: float
-    ):
-        pass
+        return self.linear(output)
 
     def generate(
             self,
@@ -113,28 +107,70 @@ class GPT(torch.nn.Module):
                 x = torch.cat((x, new_token), dim=1)
         return x
 
-    def save(self, path):
-        torch.save({
-            'model_state_dict': self.state_dict(),
-            'vocab_size': self.vocab_size,
-            'max_seq_len': self.max_seq_len,
-            'emb_size': self.emb_size,
-            'num_heads': self.num_heads,
-            'head_size': self.head_size,
-            'num_layers': self.num_layers
-        }, path)
-        
+    def summary(self):
+        line = "─" * 56
+        print(f"\n{line}")
+        print(f"  {'Layer':<30} {'Params':>12}  {'Share':>6}")
+        print(line)
+
+        counts = {}
+        for name, module in self.named_children():
+            if isinstance(module, torch.nn.ModuleList):
+                for i, block in enumerate(module):
+                    params = sum(p.numel() for p in block.parameters())
+                    counts[f"{name}[{i}]"] = params
+            else:
+                params = sum(p.numel() for p in module.parameters())
+                counts[name] = params
+
+        total = sum(counts.values())
+        for name, params in counts.items():
+            share = params / total * 100
+            print(f"  {name:<30} {params:>12,}  {share:>5.1f}%")
+
+        print(line)
+        print(f"  {'Total':<30} {total:>12,}  100.0%")
+        print(f"  {'Trainable':<30} {sum(p.numel() for p in self.parameters() if p.requires_grad):>12,}")
+        print(f"{line}\n")
+
+    def save_pretrained(self, save_dir: str):
+        os.makedirs(save_dir, exist_ok=True)
+
+        config = {
+            "model_type": "GPT",
+            "vocab_size": self.vocab_size,
+            "max_seq_len": self.max_seq_len,
+            "emb_size": self.emb_size,
+            "hidden_size": self.hidden_size,
+            "num_heads": self.num_heads,
+            "head_size": self.head_size,
+            "num_layers": self.num_layers,
+            "dropout": self.dropout.p,
+            "temperature": self.temperature,
+        }
+        with open(os.path.join(save_dir, "config.json"), "w") as f:
+            json.dump(config, f, indent=2)
+
+        save_file(self.state_dict(), os.path.join(save_dir, "model.safetensors"))
+
     @classmethod
-    def load(cls, path, device):
-        checkpoint = torch.load(path, map_location=device)
+    def from_pretrained(cls, save_dir: str, device: str = "cpu"):
+        with open(os.path.join(save_dir, "config.json")) as f:
+            config = json.load(f)
+
         model = cls(
-            vocab_size=checkpoint['vocab_size'],
-            max_seq_len=checkpoint['max_seq_len'],
-            emb_size=checkpoint['emb_size'],
-            num_heads=checkpoint['num_heads'],
-            head_size=checkpoint['head_size'],
-            num_layers=checkpoint['num_layers']
+            vocab_size=config["vocab_size"],
+            max_seq_len=config["max_seq_len"],
+            emb_size=config["emb_size"],
+            hidden_size=config["hidden_size"],
+            num_heads=config["num_heads"],
+            head_size=config["head_size"],
+            num_layers=config["num_layers"],
+            dropout=config["dropout"],
+            temperature=config["temperature"],
+            device=device,
         )
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.to(device)
+
+        state_dict = load_file(os.path.join(save_dir, "model.safetensors"), device=device)
+        model.load_state_dict(state_dict)
         return model

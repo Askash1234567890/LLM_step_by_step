@@ -1,0 +1,9 @@
+model:
+  vocab_size: 50257
+  max_seq_len: 512
+  emb_size: 256
+  hidden_size: 1024
+  num_heads: 8
+  head_size: 32
+  num_layers: 6
+  dropout: 0.1

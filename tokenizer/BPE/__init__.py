@@ -1,5 +1,8 @@
+import json
+import os
 from collections import Counter
 from typing import List
+
 
 class BPE():
     "BPE tokenizer"
@@ -82,3 +85,32 @@ class BPE():
 
     def decode(self, tokens_id: List[int]) -> str:
         return "".join((self.id2token[token_id] for token_id in tokens_id))
+
+    def save_pretrained(self, save_dir: str):
+        os.makedirs(save_dir, exist_ok=True)
+
+        with open(os.path.join(save_dir, "tokenizer_config.json"), "w", encoding="utf-8") as f:
+            json.dump({"tokenizer_class": "BPE", "vocab_size": self.vocab_size}, f, indent=2)
+
+        tokenizer_data = {
+            "vocab": self.token2id,
+            "id2token": {str(k): v for k, v in self.id2token.items()},
+        }
+        with open(os.path.join(save_dir, "tokenizer.json"), "w", encoding="utf-8") as f:
+            json.dump(tokenizer_data, f, indent=2, ensure_ascii=False)
+
+    @classmethod
+    def from_pretrained(cls, save_dir: str):
+        with open(os.path.join(save_dir, "tokenizer_config.json"), encoding="utf-8") as f:
+            config = json.load(f)
+
+        tokenizer = cls(vocab_size=config["vocab_size"])
+
+        with open(os.path.join(save_dir, "tokenizer.json"), encoding="utf-8") as f:
+            data = json.load(f)
+
+        tokenizer.token2id = data["vocab"]
+        tokenizer.id2token = {int(k): v for k, v in data["id2token"].items()}
+        tokenizer.unique_tokens = list(data["vocab"].keys())
+
+        return tokenizer
