@@ -1,9 +1,9 @@
 model:
-  vocab_size: 50257
+  vocab_size: 100277  # cl100k_base (tiktoken)
   max_seq_len: 512
-  emb_size: 256
-  hidden_size: 1024
-  num_heads: 8
-  head_size: 32
-  num_layers: 6
+  emb_size: 768
+  hidden_size: 3072
+  head_size: 64
+  num_heads: 12
+  num_layers: 12
   dropout: 0.1

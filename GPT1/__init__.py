@@ -9,7 +9,7 @@ from embeddings.PositionalEmbeddings import PositionalEmbeddings
 from Decoder import Decoder
 
 
-class GPT(torch.nn.Module):
+class GPT1(torch.nn.Module):
     def __init__(
         self,
         vocab_size: int,

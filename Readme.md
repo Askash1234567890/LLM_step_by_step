@@ -16,9 +16,30 @@
 
 This repository is an educational, ground-up implementation of a GPT-style decoder-only transformer. No `transformers` library — every layer, every attention head, every training loop is written by hand. The goal is to understand exactly what happens inside a large language model.
 
+### GPT-1
+
+GPT-1 parametrs:
+
+- vocab_size: 40 000
+- seq_len: 512
+- max_seq_len: 512
+
+- emb_size: 768
+- num_layers: 12
+- num_heads: 12
+- head_size: 64
+- hidden_size: 3072 (4 * emb_size)
+- dropout: 0.1
+
+- num_epoch: 100
+- lr: 2.5e-4
+- batch_size: 64
+
+### GPT-2
+
 ---
 
-## 🏗️ Architecture
+## 🏗️ Project architecture
 
 ```
 llm_step_by_step/

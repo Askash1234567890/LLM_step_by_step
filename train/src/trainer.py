@@ -165,7 +165,7 @@ class Trainer:
         )
 
     def load_checkpoint(self, checkpoint_dir: str) -> int:
-        from GPT import GPT
+        from GPT1 import GPT
         self.model = GPT.from_pretrained(checkpoint_dir, device=self.device)
 
         trainer_state = torch.load(

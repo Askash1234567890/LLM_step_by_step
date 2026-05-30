@@ -17,7 +17,6 @@ class GetData(Dataset):
     def __init__(self, data_path: str, seq_len: int):
         super().__init__()
         self.seq_len = seq_len
-        # memmap: reads from disk on demand — no RAM spike on large files
         self.data = np.memmap(os.path.expanduser(data_path), dtype=np.int32, mode="r")
 
     def __len__(self):
@@ -31,7 +30,10 @@ class GetData(Dataset):
 
 
 if __name__ == "__main__":
-    dataset = GetData(data_path="data/processed/train.bin", seq_len=512)
+    dataset = GetData(
+        data_path="~/pet_projects/datasets/llm_pretrain/test_pretrain/tokenized_binary_texts/train.bin",
+        seq_len=512,
+    )
     print(f"samples: {len(dataset):,}")
     x, y = dataset[0]
     print(f"x: {x[:10]}  shape: {x.shape}")

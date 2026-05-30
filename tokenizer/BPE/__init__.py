@@ -3,6 +3,8 @@ import os
 from collections import Counter
 from typing import List
 
+from tqdm import tqdm
+
 
 class BPE():
     "BPE tokenizer"
@@ -44,9 +46,18 @@ class BPE():
         self.unique_tokens_set = set(text_list).copy()
         self.unique_tokens = sorted(self.unique_tokens_set).copy()
 
+        pbar = tqdm(
+            total=self.vocab_size,
+            initial=len(self.unique_tokens),
+            desc="BPE training",
+            unit="token",
+            dynamic_ncols=True,
+        )
+
         while len(self.unique_tokens) < self.vocab_size:
             i, n = 0, len(text_list)
             max_fr_pair = self._maxFreqTokens2(text_list, n)
+            prev_size = len(self.unique_tokens)
             new_text_list = []
             while i < n:
                 if i != n - 1 and (text_list[i], text_list[i + 1]) == max_fr_pair:
@@ -60,6 +71,12 @@ class BPE():
                     new_text_list.append(text_list[i])
                 i += 1
             text_list = new_text_list.copy()
+
+            added = len(self.unique_tokens) - prev_size
+            pbar.update(added)
+            pbar.set_postfix(vocab=len(self.unique_tokens), tokens=len(text_list))
+
+        pbar.close()
 
         self.token2id = dict(zip(self.unique_tokens, range(self.vocab_size)))
         self.id2token = dict(zip(range(self.vocab_size), self.unique_tokens))

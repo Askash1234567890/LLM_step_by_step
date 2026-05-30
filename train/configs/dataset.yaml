@@ -1,2 +1,4 @@
 dataset:
+  train_path: ~/pet_projects/datasets/llm_pretrain/test_pretrain/tokenized_binary_texts/train.bin
+  val_path: ~/pet_projects/datasets/llm_pretrain/test_pretrain/tokenized_binary_texts/val.bin
   seq_len: 512

@@ -1,13 +1,12 @@
 import argparse
 import os
 
-import torch
 from omegaconf import OmegaConf, DictConfig
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 
-from GPT import GPT
-from train.dataset import GetData
-from train.trainer import Trainer
+from GPT1 import GPT1
+from train.src.dataset import GetData
+from train.src.trainer import Trainer
 
 
 def load_config(config_dir: str) -> DictConfig:
@@ -25,17 +24,13 @@ def build_dataloaders(config: DictConfig) -> tuple[DataLoader, DataLoader]:
     data_cfg = config.dataset
 
     pin_memory = train_cfg.device.startswith("cuda")
+    num_workers = train_cfg.get("num_workers", 0)
 
-    # TODO: заменить на реальные данные (список токенов)
-    data: list[int] = []
+    train_dataset = GetData(data_path=data_cfg.train_path, seq_len=data_cfg.seq_len)
+    valid_dataset = GetData(data_path=data_cfg.val_path,   seq_len=data_cfg.seq_len)
 
-    dataset = GetData(data=data, seq_len=data_cfg.seq_len)
-
-    train_size = int(0.9 * len(dataset))
-    valid_size = len(dataset) - train_size
-    train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
-
-    num_workers = train_cfg.get("num_workers", 1)
+    print(f"  train samples: {len(train_dataset):,}")
+    print(f"  valid samples: {len(valid_dataset):,}")
 
     train_loader = DataLoader(
         train_dataset,
@@ -60,7 +55,7 @@ def main(config_dir: str, resume_from: str = None):
     model_cfg = config.model
     train_cfg = config.training
 
-    model = GPT(
+    model = GPT1(
         vocab_size=model_cfg.vocab_size,
         max_seq_len=model_cfg.max_seq_len,
         emb_size=model_cfg.emb_size,

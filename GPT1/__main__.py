@@ -1,5 +1,5 @@
 import torch
-from GPT import GPT
+from GPT1 import GPT1
 
 vocab_size = 1000
 max_seq_len = 100
@@ -16,7 +16,7 @@ device = "mps"
 # determe the model init
 torch.manual_seed(42)
 
-gpt = GPT(
+gpt = GPT1(
     vocab_size=vocab_size,
     max_seq_len=max_seq_len,
     emb_size=emb_size,
