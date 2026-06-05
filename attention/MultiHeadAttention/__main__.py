@@ -19,5 +19,10 @@ MHA = MultiHeadAttention(
     dropout=dropout
 )
 
-res = MHA.forward(x)
+cache, use_cache = None, True
+res, res_cache = MHA(
+    x=x,
+    cache=cache,
+    use_cache=use_cache
+)
 print(x.shape, res.shape)

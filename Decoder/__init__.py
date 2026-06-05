@@ -36,15 +36,19 @@ class Decoder(torch.nn.Module):
         self.norm1 = torch.nn.LayerNorm(emb_size)
         self.norm2 = torch.nn.LayerNorm(emb_size)
 
-    def forward(self, x: torch.Tensor):
-        x_MHA = self.MHA(x)
+    def forward(
+            self, 
+            x: torch.Tensor,
+            use_cache: bool = False,
+            cache: list[tuple] | None = None
+        ):
+
+        # using pre-norm for "modern" architectures
+        x_MHA, new_cache = self.MHA(self.norm1(x), use_cache=use_cache, cache=cache)
         x = x + x_MHA
 
-        x = self.norm1(x)
-
-        x_ffn = self.ffn(x)
+        x_ffn = self.ffn(self.norm2(x))
         x = x + x_ffn
 
-        x = self.norm2(x)
-        return x
+        return x, new_cache
 
